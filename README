@@ -1,6 +1,6 @@
 Collection of small and simple home-brew scripts
 
 list of scripts with short description:
-  hbserver.php       - server for hbclient; should be served by http server
+  hbserver.php       - server for hbclient; should be served by HTTP server
   hbclient.sh        - client for hbserver; should be run from shell
   ripcd.sh           - shell script to rip contents of the Audio CD
