@@ -4,3 +4,4 @@ list of scripts with short description:
   hbserver.php       - server for hbclient; should be served by HTTP server
   hbclient.sh        - client for hbserver; should be run from shell
   ripcd.sh           - shell script to rip contents of the Audio CD
+  downsample_flac.sh - downsample flac file to 16 bits 44.1kHz sample rate
