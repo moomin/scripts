@@ -1,9 +1,12 @@
 #!/bin/sh
 
 IN=$1
+IN_SR=96000
+IN_BPS=24
+
 OUT=$2
-SAMPLE_RATE=44100
-BPS=16
+OUT_SR=44100
+OUT_BPS=16
 
 TAGS=$OUT.tags
 
@@ -25,23 +28,24 @@ TAGS=$OUT.tags
 #in this case encoder doesn't know input size and cannot create seektable and cuesheet cannot be added
 #flac -s -d -c $IN | sox - -S -D -r $SAMPLE_RATE -b $BPS -t raw -e signed-integer - | flac -s -8 -o $OUT --endian=little --channels=2 --sign=signed --bps=16 --sample-rate=44100 -
 
-#Option 3: randomly does not work on linux
-#but requires creating a wav file resulting in more time to process
-#sox crashes with following message:
-#sox FAIL formats: can't open input  `-': WAVE: RIFF header not found 
-#flac -s -d -c $IN | sox - -S -D -r $SAMPLE_RATE -b $BPS $OUT.wav
+#Option 3: always works but slow because requires temporary files on each stage
+#flac -d -o $OUT.wav.orig $IN
+#sox $OUT.wav.orig -S -D -r $SAMPLE_RATE -b $BPS $OUT.wav
+#rm $OUT.wav.orig
+#flac -8 -S 4s -o $OUT $OUT.wav 
+#rm $OUT.wav
 
-echo "Decoding"
-flac -d -o $OUT.wav.orig $IN
+#Option 4: always works and almost as fast as #1
+#the only slowdown is in additional seektable generation command
+echo "Decoding, downsampling and encoding"
+flac -s -d -c --force-raw-format --endian=little --sign=signed $IN |\
+sox -t raw -r $IN_SR -b $IN_BPS -c 2 -e signed-integer -\
+    -D\
+    -t raw -r $OUT_SR -b $OUT_BPS - |\
+flac -s -8 -o $OUT -P 65536 --endian=little --channels=2 --sign=signed --bps=$OUT_BPS --sample-rate=$OUT_SR -
 
-echo "Downsampling"
-sox $OUT.wav.orig -S -D -r $SAMPLE_RATE -b $BPS $OUT.wav
-
-#cleanup original decoded wav
-rm $OUT.wav.orig
-
-echo "Encoding"
-flac -8 -S 4s -o $OUT $OUT.wav 
+echo "Adding seektable"
+metaflac --add-seekpoint=4s $OUT
 
 echo "Exporting tags"
 metaflac --export-tags-to=$TAGS $IN
@@ -49,8 +53,7 @@ metaflac --export-tags-to=$TAGS $IN
 echo "Importing tags"
 metaflac --import-tags-from=$TAGS $OUT
 
-#cleanup
-rm $OUT.wav
 rm $TAGS
-echo "Downsampling complete"
+echo "Downsampling finished"
+ls -lh $OUT
 
