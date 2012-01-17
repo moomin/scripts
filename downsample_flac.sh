@@ -1,8 +1,8 @@
 #!/bin/sh
 
 IN=$1
-IN_SR=96000
-IN_BPS=24
+IN_SR=`metaflac --show-sample-rate $1`
+IN_BPS=`metaflac --show-bps $1`
 
 OUT=$2
 OUT_SR=44100
@@ -21,16 +21,16 @@ TAGS=$OUT.tags
 #Option 1: does not work sometimes
 #does everything (decoding, downsampling, encoding) and the fastest
 #encoder just crashes with unexpected EOF at 99-100%
-#flac -s -d -c $IN | sox - -D -r $SAMPLE_RATE -b $BPS -t wav - | flac -8 -o $OUT -
+#flac -s -d -c $IN | sox - -D -r $OUT_SR -b $OUT_BPS -t wav - | flac -8 -o $OUT -
 
 #Option 2: always work but has drawbacks
 #does everything (decoding, downsampling, encoding) with same speed as #1
 #in this case encoder doesn't know input size and cannot create seektable and cuesheet cannot be added
-#flac -s -d -c $IN | sox - -S -D -r $SAMPLE_RATE -b $BPS -t raw -e signed-integer - | flac -s -8 -o $OUT --endian=little --channels=2 --sign=signed --bps=16 --sample-rate=44100 -
+#flac -s -d -c $IN | sox - -S -D -r $OUT_SR -b $OUT_BPS -t raw -e signed-integer - | flac -s -8 -o $OUT --endian=little --channels=2 --sign=signed --bps=$OUT_BPS --sample-rate=$OUT_SR -
 
 #Option 3: always works but slow because requires temporary files on each stage
 #flac -d -o $OUT.wav.orig $IN
-#sox $OUT.wav.orig -S -D -r $SAMPLE_RATE -b $BPS $OUT.wav
+#sox $OUT.wav.orig -S -D -r $OUT_SR -b $OUT_BPS $OUT.wav
 #rm $OUT.wav.orig
 #flac -8 -S 4s -o $OUT $OUT.wav 
 #rm $OUT.wav
