@@ -10,7 +10,7 @@ OUT_BPS=16
 
 TAGS="$OUT.tags"
 
-if [[ $3 == "mp3" ]]
+if test $3 = mp3
 then
 FORMAT=mp3
 else
@@ -20,7 +20,7 @@ fi
 ENCODEFLAC="flac -s -8 -o ${OUT} -P 65536 --endian=little --channels=2 --sign=signed --bps=$OUT_BPS --sample-rate=$OUT_SR -"
 ENCODEMP3="lame -r -s 44.1 --bitwidth 16 --signed --little-endian -m s --preset insane --quiet - ${OUT}"
 
-if [[ $FORMAT == mp3 ]]
+if test $FORMAT = mp3
 then
 ENCODECMD=$ENCODEMP3
 else
